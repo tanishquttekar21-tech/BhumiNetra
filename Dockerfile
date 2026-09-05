@@ -4,7 +4,7 @@ FROM python:3.11-slim
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PORT=5000
+    PORT=10000
 
 # Set working directory
 WORKDIR /app
@@ -26,7 +26,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Expose application port
-EXPOSE 5000
+EXPOSE 10000
 
-# Start production application server using Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--threads", "4", "wsgi:app"]
+# Start production application server using Gunicorn dynamically binding to PORT
+CMD gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 wsgi:app
+
