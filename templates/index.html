@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BhoomiAI - Intelligent Land Record Digitization & Validation Platform</title>
+    <!-- Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet.js GIS Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <!-- Header Navbar -->
+    <header class="app-navbar">
+        <div class="brand-container">
+            <div class="brand-logo">
+                <i class="fa-solid fa-map-location-dot"></i>
+            </div>
+            <div>
+                <h1 class="brand-title">BhoomiAI</h1>
+                <p class="brand-subtitle">Intelligent Land Record Digitization & Validation Platform</p>
+            </div>
+        </div>
+        <div class="nav-stats">
+            <div class="nav-chip">
+                <span class="dot-pulse"></span>
+                <span>AI Pipeline Active</span>
+            </div>
+            <div class="nav-chip">
+                <i class="fa-solid fa-shield-halved" style="color: var(--primary);"></i>
+                <span id="navTotalProcessed">0 Records Digitized</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+
+        <!-- Architectural Demo Flowchart Stepper -->
+        <section class="pipeline-flowbar">
+            <div class="flowbar-title">
+                <i class="fa-solid fa-diagram-project" style="color: var(--primary);"></i>
+                <span>Architectural Demo Pipeline Flow</span>
+            </div>
+            <div class="stepper-list">
+                <div class="step-node active" id="step-node-1" onclick="jumpToStep(1)">
+                    <div class="step-icon"><i class="fa-solid fa-file-pdf"></i></div>
+                    <span class="step-label">1. Land Record</span>
+                </div>
+                <div class="step-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+                
+                <div class="step-node" id="step-node-2" onclick="jumpToStep(2)">
+                    <div class="step-icon"><i class="fa-solid fa-eye"></i></div>
+                    <span class="step-label">2. OpenCV Filter</span>
+                </div>
+                <div class="step-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+                
+                <div class="step-node" id="step-node-3" onclick="jumpToStep(3)">
+                    <div class="step-icon"><i class="fa-solid fa-language"></i></div>
+                    <span class="step-label">3. Multilingual OCR</span>
+                </div>
+                <div class="step-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+                
+                <div class="step-node" id="step-node-4" onclick="jumpToStep(4)">
+                    <div class="step-icon"><i class="fa-solid fa-brain"></i></div>
+                    <span class="step-label">4. AI Extraction</span>
+                </div>
+                <div class="step-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+                
+                <div class="step-node" id="step-node-5" onclick="jumpToStep(5)">
+                    <div class="step-icon"><i class="fa-solid fa-calculator"></i></div>
+                    <span class="step-label">5. Validation Rules</span>
+                </div>
+                <div class="step-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+                
+                <div class="step-node" id="step-node-6" onclick="jumpToStep(6)">
+                    <div class="step-icon"><i class="fa-solid fa-gauge-high"></i></div>
+                    <span class="step-label">6. Confidence Score</span>
+                </div>
+                <div class="step-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+                
+                <div class="step-node" id="step-node-7" onclick="jumpToStep(7)">
+                    <div class="step-icon"><i class="fa-solid fa-user-check"></i></div>
+                    <span class="step-label">7. Auto / HITL</span>
+                </div>
+                <div class="step-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+                
+                <div class="step-node" id="step-node-8" onclick="jumpToStep(8)">
+                    <div class="step-icon"><i class="fa-solid fa-database"></i></div>
+                    <span class="step-label">8. DB & GIS</span>
+                </div>
+                <div class="step-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+                
+                <div class="step-node" id="step-node-9" onclick="jumpToStep(9)">
+                    <div class="step-icon"><i class="fa-solid fa-chart-line"></i></div>
+                    <span class="step-label">9. Dashboard</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Input Section: Sample Preset Document Library & File Upload -->
+        <section class="input-section">
+            <div class="card-glass">
+                <div class="section-heading">
+                    <span><i class="fa-solid fa-layer-group" style="color: var(--cyan);"></i> Select Sample Land Record Document</span>
+                    <span style="font-size: 12px; color: var(--text-dim);">Pre-loaded multi-state land extracts</span>
+                </div>
+                <div class="preset-grid">
+                    <div class="preset-card active" id="preset-maharashtra_712" onclick="selectPreset('maharashtra_712')">
+                        <span class="preset-badge badge-clean">High Confidence Preset</span>
+                        <div class="preset-title">Form 7/12 Extract (Satbara)</div>
+                        <div class="preset-desc">Maharashtra Revenue Record | Marathi Devanagari Script | Clean Scan</div>
+                    </div>
+                    
+                    <div class="preset-card" id="preset-karnataka_rtc" onclick="selectPreset('karnataka_rtc')">
+                        <span class="preset-badge badge-warning">Low Confidence (Triggers HITL)</span>
+                        <div class="preset-title">RTC / Pahani Record</div>
+                        <div class="preset-desc">Karnataka Revenue | Kannada Script | Rotated Scan & Math Discrepancy</div>
+                    </div>
+                    
+                    <div class="preset-card" id="preset-up_khasra" onclick="selectPreset('up_khasra')">
+                        <span class="preset-badge badge-clean">High Confidence Preset</span>
+                        <div class="preset-title">Khasra - Khatauni Extract</div>
+                        <div class="preset-desc">Uttar Pradesh Bhulekh | Hindi Devanagari | Sole Khatedar</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload Custom File -->
+            <div class="card-glass" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div class="section-heading">
+                        <span><i class="fa-solid fa-cloud-arrow-up" style="color: var(--primary);"></i> Custom Upload</span>
+                    </div>
+                    <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+                        <i class="fa-solid fa-file-image" style="font-size: 28px; color: var(--text-muted); margin-bottom: 8px;"></i>
+                        <p style="font-size: 13px; color: var(--text-muted);">Drop Land Record PDF / Image</p>
+                        <p style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">Supports PNG, JPG, PDF</p>
+                        <input type="file" id="fileInput" style="display: none;" accept="image/*,.pdf" onchange="handleFileUpload(event)">
+                    </div>
+                </div>
+                <button class="btn-primary" id="btnProcess" onclick="runPipelineProcess()" style="margin-top: 16px;">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>Execute BhoomiAI Pipeline</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Pipeline Execution Visualizer (OpenCV + OCR + Fields) -->
+        <section class="pipeline-viewer-grid">
+            <!-- Left: OpenCV Stage & Multilingual OCR Visualizer -->
+            <div class="card-glass">
+                <div class="section-heading">
+                    <span><i class="fa-solid fa-microscope" style="color: var(--cyan);"></i> Visual Processing Engine (OpenCV & OCR)</span>
+                    <span class="nav-chip" id="stageMetadata" style="font-size: 11px;">Select Stage Below</span>
+                </div>
+                
+                <!-- Stage Tabs -->
+                <div class="stage-tabs">
+                    <button class="tab-btn active" id="tab-raw" onclick="switchStage('raw')">Raw Record</button>
+                    <button class="tab-btn" id="tab-grayscale" onclick="switchStage('grayscale')">Grayscale</button>
+                    <button class="tab-btn" id="tab-binarized" onclick="switchStage('binarized')">Otsu Threshold</button>
+                    <button class="tab-btn" id="tab-deskewed" onclick="switchStage('deskewed')">Deskew Matrix</button>
+                    <button class="tab-btn" id="tab-grid_overlay" onclick="switchStage('grid_overlay')">Grid Lines</button>
+                    <button class="tab-btn" id="tab-roi_overlay" onclick="switchStage('roi_overlay')">Contour ROIs</button>
+                    <button class="tab-btn" id="tab-ocr" onclick="switchStage('ocr')">Multilingual OCR</button>
+                </div>
+
+                <div class="viewer-frame" id="viewerFrame">
+                    <img id="stageImg" class="stage-image" src="" alt="Processing Stage" style="display: none;">
+                    <div class="ocr-canvas-container" id="ocrCanvasContainer" style="display: none;">
+                        <img id="ocrBaseImg" class="stage-image" src="" alt="OCR Base">
+                        <div id="ocrBoxesOverlay"></div>
+                    </div>
+                    <div id="loaderSpinner" style="text-align: center; display: none;">
+                        <i class="fa-solid fa-spinner fa-spin" style="font-size: 36px; color: var(--primary);"></i>
+                        <p style="margin-top: 12px; font-size: 14px; color: var(--text-muted);">Running OpenCV Filtering & Multilingual OCR...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: AI Field Extraction & Validation Engine Report -->
+            <div class="card-glass" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div class="section-heading">
+                        <span><i class="fa-solid fa-rectangle-list" style="color: var(--primary);"></i> AI Field Extraction & Validation Audit</span>
+                        <span id="extractionConfBadge" class="rule-status-pass" style="display: none;">Conf: 98%</span>
+                    </div>
+
+                    <div id="fieldExtractionContainer">
+                        <p style="font-size: 13px; color: var(--text-dim); font-style: italic;">Execute pipeline to view extracted land attributes and rule engine flags.</p>
+                    </div>
+                </div>
+
+                <!-- Validation Rules Accordion -->
+                <div style="margin-top: 20px;">
+                    <div style="font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 10px;">
+                        <i class="fa-solid fa-shield-check" style="color: var(--cyan);"></i> Validation Rules Audit Log
+                    </div>
+                    <div id="validationRulesList"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Decision Engine Banner -->
+        <section id="decisionBannerSection" style="display: none;">
+            <div class="decision-banner auto-accept" id="decisionBanner">
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <div class="score-circle" id="decisionScoreCircle">96%</div>
+                    <div>
+                        <h2 style="font-family: var(--font-heading); font-size: 20px; font-weight: 800; color: #fff;" id="decisionTitle">AUTO ACCEPTED RECORD</h2>
+                        <p style="font-size: 13px; color: var(--text-muted);" id="decisionSubtitle">Record passed high confidence threshold (≥85%). Automatically ingested into Database & GIS mapping.</p>
+                    </div>
+                </div>
+                <div id="decisionActionArea"></div>
+            </div>
+        </section>
+
+        <!-- Human-in-the-Loop (HITL) Review Workbench -->
+        <section id="hitlWorkbench" class="hitl-workbench" style="display: none;">
+            <div class="section-heading" style="color: var(--amber);">
+                <span><i class="fa-solid fa-user-pen"></i> Human-in-the-Loop (HITL) Review Workbench</span>
+                <span class="preset-badge badge-warning">Manual Verification Required</span>
+            </div>
+            
+            <div class="hitl-grid">
+                <div>
+                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">Crop ROI Inspector - Click field to zoom scan region</p>
+                    <div class="viewer-frame" style="min-height: 320px;">
+                        <img id="hitlCropImg" class="stage-image" src="" alt="Crop ROI">
+                    </div>
+                </div>
+                <div>
+                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">Verify & Override Extracted Land Record Attributes</p>
+                    
+                    <label style="font-size: 12px; color: var(--text-muted);">Survey / Khasra No.</label>
+                    <input type="text" id="hitlSurveyNo" class="form-control" value="">
+                    
+                    <label style="font-size: 12px; color: var(--text-muted);">Khata Account No.</label>
+                    <input type="text" id="hitlKhataNo" class="form-control" value="">
+                    
+                    <label style="font-size: 12px; color: var(--text-muted);">Primary Owner Name</label>
+                    <input type="text" id="hitlOwnerName" class="form-control" value="">
+                    
+                    <label style="font-size: 12px; color: var(--text-muted);">Review Inspector Notes</label>
+                    <textarea id="hitlComments" class="form-control" rows="2" placeholder="Reason for approval or correction..."></textarea>
+                    
+                    <div class="btn-group-hitl">
+                        <button class="btn-approve" onclick="submitHitlAction('MANUALLY_APPROVED')">
+                            <i class="fa-solid fa-check"></i> Approve & Save to DB
+                        </button>
+                        <button class="btn-reject" onclick="submitHitlAction('REJECTED')">
+                            <i class="fa-solid fa-xmark"></i> Reject Record
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- GIS Spatial Land Mapping Section -->
+        <section class="card-glass" style="margin-bottom: 28px;">
+            <div class="section-heading">
+                <span><i class="fa-solid fa-earth-asia" style="color: var(--primary);"></i> GIS Spatial Cadastral Land Parcel Map</span>
+                <span class="nav-chip" id="gisCoordinatesBadge" style="font-size: 12px;">Lat: --, Lng: --</span>
+            </div>
+            <div id="gisMap"></div>
+        </section>
+
+        <!-- Executive Analytics Dashboard & Database Browser -->
+        <section class="card-glass">
+            <div class="section-heading">
+                <span><i class="fa-solid fa-chart-pie" style="color: var(--cyan);"></i> Executive Analytics & Verified Database</span>
+                <button class="nav-chip" onclick="loadDatabaseRecords()" style="cursor: pointer;">
+                    <i class="fa-solid fa-rotate"></i> Refresh Database
+                </button>
+            </div>
+
+            <!-- Dashboard KPI Cards -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <span class="kpi-lbl">Total Records Processed</span>
+                    <span class="kpi-val" id="kpiTotalDocs">0</span>
+                </div>
+                <div class="kpi-card">
+                    <span class="kpi-lbl">Auto-Accept Rate</span>
+                    <span class="kpi-val" id="kpiAutoAcceptRate" style="color: var(--primary);">0%</span>
+                </div>
+                <div class="kpi-card">
+                    <span class="kpi-lbl">Pending HITL Queue</span>
+                    <span class="kpi-val" id="kpiPendingQueue" style="color: var(--amber);">0</span>
+                </div>
+                <div class="kpi-card">
+                    <span class="kpi-lbl">Avg Pipeline Speed</span>
+                    <span class="kpi-val" id="kpiAvgSpeed" style="color: var(--cyan);">342 ms</span>
+                </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px;">
+                <div style="background: rgba(15, 23, 42, 0.4); border-radius: var(--radius-md); padding: 16px;">
+                    <p style="font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 12px;">Digitization Outcome Breakdown</p>
+                    <canvas id="outcomeChart" height="200"></canvas>
+                </div>
+                <div style="background: rgba(15, 23, 42, 0.4); border-radius: var(--radius-md); padding: 16px;">
+                    <p style="font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 12px;">Multilingual Script Distribution</p>
+                    <canvas id="languageChart" height="200"></canvas>
+                </div>
+            </div>
+
+            <!-- Searchable Database Table -->
+            <div style="overflow-x: auto;">
+                <table class="field-table" id="dbTable">
+                    <thead>
+                        <tr>
+                            <th>Record ID</th>
+                            <th>Document Type</th>
+                            <th>State / Village</th>
+                            <th>Survey No</th>
+                            <th>Khata No</th>
+                            <th>Area (Acres)</th>
+                            <th>Confidence</th>
+                            <th>Status</th>
+                            <th>Digital Hash</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dbTableBody">
+                        <tr>
+                            <td colspan="10" style="text-align: center; color: var(--text-dim); padding: 20px;">
+                                Loading verified land records from SQLite database...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
