@@ -9,7 +9,7 @@ def check(url, method='GET', data=None):
     print(f"[{method}] {url} -> HTTP {res.status} OK | Keys: {list(val.keys())}")
     return val
 
-print("=== VERIFYING BHOOMIAI REST APIS ===")
+print("=== VERIFYING BHUMINETRA REST APIS ===")
 
 # 1. Presets Endpoint
 check("http://127.0.0.1:5000/api/presets")

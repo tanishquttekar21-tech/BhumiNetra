@@ -1,4 +1,4 @@
-// Global BhoomiAI Application State
+// Global BhumiNetra Application State
 let selectedPresetId = "maharashtra_712";
 let currentRecord = null;
 let gisMap = null;
@@ -24,7 +24,7 @@ function initGisMap() {
     
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
-        attribution: '© OpenStreetMap | BhoomiAI Spatial Cadastral Engine'
+        attribution: '© OpenStreetMap | BhumiNetra Spatial Cadastral Engine'
     }).addTo(gisMap);
 }
 
@@ -66,7 +66,7 @@ function handleFileUpload(event) {
     });
 }
 
-// Run BhoomiAI Pipeline Processing
+// Run BhumiNetra Pipeline Processing
 function runPipelineProcess() {
     showLoader(true);
     
@@ -556,5 +556,5 @@ function updateCharts(stats) {
 
 // Simulate Certificate Download
 function downloadCertificate(recId) {
-    alert(`Generating Official BhoomiAI Digitally Signed Land Record Audit Certificate for Record ID: ${recId}\n\nSHA256 Stamp & QR Verification attached.`);
+    alert(`Generating Official BhumiNetra Digitally Signed Land Record Audit Certificate for Record ID: ${recId}\n\nSHA256 Stamp & QR Verification attached.`);
 }
