@@ -3,7 +3,7 @@ import json
 import os
 import time
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "..", "bhoomiai.db")
+DB_PATH = os.path.join(os.path.dirname(__file__), "..", "bhuminetra.db")
 
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
@@ -11,7 +11,7 @@ def get_db_connection():
     return conn
 
 def init_db():
-    """Initializes SQLite database schema for BhoomiAI platform"""
+    """Initializes SQLite database schema for BhumiNetra platform"""
     conn = get_db_connection()
     cursor = conn.cursor()
     
@@ -112,7 +112,7 @@ def save_record(record_data):
     cursor.execute("""
     INSERT INTO audit_logs (record_id, action, performed_by, details)
     VALUES (?, ?, ?, ?);
-    """, (rec_id, f"RECORD_SAVED_STATUS_{record_data.get('status')}", "BhoomiAI_Pipeline", f"Confidence: {record_data.get('overall_confidence')}%"))
+    """, (rec_id, f"RECORD_SAVED_STATUS_{record_data.get('status')}", "BhumiNetra_Pipeline", f"Confidence: {record_data.get('overall_confidence')}%"))
     
     conn.commit()
     conn.close()

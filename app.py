@@ -226,12 +226,13 @@ def platform_stats():
 
 if __name__ == '__main__':
     # Ensure sample docs exist
-    sample_script = os.path.join(os.path.dirname(__file__), "sample_generator.py")
     if not os.path.exists(SAMPLE_DOCS_DIR) or len(os.listdir(SAMPLE_DOCS_DIR)) == 0:
         import sample_generator
         sample_generator.create_sample_712_maharashtra()
         sample_generator.create_sample_rtc_karnataka()
         sample_generator.create_sample_khasra_up()
         
-    print("Starting BhoomiAI Platform Server on port 5000...")
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    print(f"Starting BhumiNetra Platform Server on port {port}...")
+    app.run(host='0.0.0.0', port=port, debug=False)
+

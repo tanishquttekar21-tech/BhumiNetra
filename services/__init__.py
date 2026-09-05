@@ -1,1 +1,1 @@
-# Services package for BhoomiAI platform
+# Services package for BhumiNetra platform

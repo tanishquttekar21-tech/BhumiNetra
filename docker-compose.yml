@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  bhuminetra:
+    build: .
+    container_name: bhuminetra_app
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+    volumes:
+      - ./bhuminetra.db:/app/bhuminetra.db
+      - ./uploads:/app/uploads
+    restart: unless-stopped
