@@ -130,22 +130,32 @@ def process_record():
         processing_time_ms = int((time.time() - start_time) * 1000)
         log_audit_event(rec_id, "PROCESSING_COMPLETED", "BhumiNetra_Pipeline", f"Image processing and OCR completed in {processing_time_ms}ms")
 
-        # STEP 4: Validation Engine
-        validation_res = validate_land_record(extracted_fields, ocr_res)
+        # STEP 4: Validation Engine & ML Audit
+        existing_records = get_all_records()
+        candidate_fields = dict(extracted_fields)
+        candidate_fields["id"] = rec_id
+        validation_res = validate_land_record(candidate_fields, ocr_res, existing_records=existing_records)
         
         # AUDIT: Validation Completed
         log_audit_event(rec_id, "VALIDATION_COMPLETED", "Validation_Engine", {
             "validation_score": validation_res["validation_score"],
             "passed_rules": f"{validation_res['passed_count']}/{validation_res['total_count']}",
-            "warnings_count": len(validation_res.get("warnings", []))
+            "warnings_count": len(validation_res.get("warnings", [])),
+            "duplicate_probability": validation_res.get("duplicate_probability", 0.0),
+            "anomaly_score": validation_res.get("anomaly_score", 0.0)
         })
         
         # STEP 5: Confidence Score & Branching
-        score_pct, decision_status, decision_label = compute_overall_confidence(
-            ocr_res["avg_confidence"],
-            extracted_fields["extraction_confidence"],
-            validation_res["validation_score"]
-        )
+        score_pct = validation_res.get("overall_confidence")
+        decision_status = validation_res.get("status")
+        decision_label = validation_res.get("decision_label")
+        
+        if score_pct is None or decision_status is None:
+            score_pct, decision_status, decision_label = compute_overall_confidence(
+                ocr_res["avg_confidence"],
+                extracted_fields["extraction_confidence"],
+                validation_res["validation_score"]
+            )
         
         if decision_status == "PENDING_HUMAN_REVIEW":
             log_audit_event(rec_id, "SENT_TO_REVIEW", "Validation_Engine", f"Confidence score ({score_pct}%) below auto-accept threshold (85.0%)")

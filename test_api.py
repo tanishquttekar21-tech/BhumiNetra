@@ -7,12 +7,17 @@ import sys
 sys.path.append(os.path.dirname(__file__))
 
 from app import app
-from services.db_storage import init_db
+from services.db_storage import init_db, get_db_connection
 
 class BhumiNetraBackendTestCase(unittest.TestCase):
 
     def setUp(self):
         init_db()
+        conn = get_db_connection()
+        conn.execute("DELETE FROM land_records")
+        conn.execute("DELETE FROM audit_logs")
+        conn.commit()
+        conn.close()
         self.client = app.test_client()
         self.client.testing = True
 
