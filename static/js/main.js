@@ -371,7 +371,17 @@ function submitHitlAction(actionStatus) {
     
     const surveyNo = document.getElementById("hitlSurveyNo").value;
     const khataNo = document.getElementById("hitlKhataNo").value;
+    const ownerName = document.getElementById("hitlOwnerName").value;
     const comments = document.getElementById("hitlComments").value;
+    
+    const updatedFields = {
+        survey_no: surveyNo,
+        survey_khasra_no: surveyNo,
+        khata_no: khataNo
+    };
+    if (ownerName) {
+        updatedFields.owner = ownerName;
+    }
     
     fetch("/api/review", {
         method: "POST",
@@ -380,20 +390,20 @@ function submitHitlAction(actionStatus) {
             record_id: currentRecord.id,
             action: actionStatus,
             comments: comments,
-            updated_fields: {
-                survey_no: surveyNo,
-                khata_no: khataNo
-            }
+            updated_fields: updatedFields
         })
     })
     .then(res => res.json())
     .then(data => {
         if (data.status === "success") {
-            alert(`Record ${currentRecord.id} successfully updated to: ${actionStatus}`);
-            currentRecord.status = actionStatus;
-            currentRecord.survey_no = surveyNo;
-            currentRecord.khata_no = khataNo;
-            renderDecisionBanner(currentRecord);
+            // Fetch updated record from database to sync all platform components
+            fetch(`/api/records/${currentRecord.id}`)
+            .then(r => r.json())
+            .then(recData => {
+                if (recData.status === "success" && recData.record) {
+                    renderPipelineOutput(recData.record);
+                }
+            });
             document.getElementById("hitlWorkbench").style.display = "none";
             loadDatabaseRecords();
         } else {
@@ -461,6 +471,17 @@ function loadDatabaseRecords() {
     });
 }
 
+function loadRecordIntoWorkspace(recId) {
+    fetch(`/api/records/${recId}`)
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === "success" && data.record) {
+            renderPipelineOutput(data.record);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    });
+}
+
 function renderDatabaseTable(records) {
     const tbody = document.getElementById("dbTableBody");
     const countBadge = document.getElementById("navTotalProcessed");
@@ -472,7 +493,7 @@ function renderDatabaseTable(records) {
     }
     
     tbody.innerHTML = records.map(r => `
-        <tr>
+        <tr style="cursor: pointer;" onclick="loadRecordIntoWorkspace('${r.id}')">
             <td style="font-family: monospace; font-size: 12px; color: var(--cyan);">${r.id}</td>
             <td style="font-weight: 600;">${r.doc_type || 'Land Record'}</td>
             <td>${r.state} / ${r.village}</td>
@@ -482,14 +503,76 @@ function renderDatabaseTable(records) {
             <td><span class="${r.overall_confidence >= 85 ? 'rule-status-pass' : 'rule-status-fail'}">${r.overall_confidence}%</span></td>
             <td><span class="preset-badge ${r.status.includes('ACCEPTED') || r.status.includes('APPROVED') ? 'badge-clean' : 'badge-warning'}">${r.status}</span></td>
             <td style="font-family: monospace; font-size: 10px; color: var(--text-dim);">${(r.digital_hash || '').substring(0, 16)}...</td>
-            <td>
-                <button onclick="downloadCertificate('${r.id}')" style="background: rgba(6, 182, 212, 0.2); border: 1px solid var(--cyan); color: var(--cyan); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px;">
-                    <i class="fa-solid fa-download"></i> Cert
-                </button>
+            <td onclick="event.stopPropagation();">
+                <div style="display: flex; gap: 4px;">
+                    <button onclick="downloadCertificate('${r.id}')" title="Download Audit Certificate" style="background: rgba(6, 182, 212, 0.2); border: 1px solid var(--cyan); color: var(--cyan); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px;">
+                        <i class="fa-solid fa-download"></i> Cert
+                    </button>
+                    <button onclick="viewAuditHistory('${r.id}')" title="View Audit Trail History" style="background: rgba(99, 102, 241, 0.2); border: 1px solid var(--indigo); color: var(--indigo); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px;">
+                        <i class="fa-solid fa-clock-rotate-left"></i> History
+                    </button>
+                </div>
             </td>
         </tr>
     `).join("");
 }
+
+function viewAuditHistory(recordId) {
+    const recId = recordId || (currentRecord ? currentRecord.id : null);
+    if (!recId) return;
+    
+    const modal = document.getElementById("auditModal");
+    const title = document.getElementById("auditModalRecId");
+    const body = document.getElementById("auditModalBody");
+    
+    if (title) title.innerText = recId;
+    if (body) body.innerHTML = '<p style="color: var(--text-dim); padding: 20px; text-align: center;"><i class="fa-solid fa-spinner fa-spin"></i> Loading audit history...</p>';
+    if (modal) modal.style.display = "flex";
+    
+    fetch(`/api/records/${recId}/audit`)
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === "success" && data.audit_logs) {
+            if (data.audit_logs.length === 0) {
+                body.innerHTML = '<p style="color: var(--text-dim); padding: 20px; text-align: center;">No audit logs recorded for this document.</p>';
+                return;
+            }
+            body.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    ${data.audit_logs.map(log => {
+                        let detailsHtml = '';
+                        if (typeof log.details === 'object' && log.details !== null) {
+                            detailsHtml = `<pre style="background: rgba(15, 23, 42, 0.6); padding: 8px; border-radius: 6px; font-size: 11px; margin-top: 4px; color: var(--cyan); white-space: pre-wrap;">${JSON.stringify(log.details, null, 2)}</pre>`;
+                        } else {
+                            detailsHtml = `<div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">${log.details || ''}</div>`;
+                        }
+                        return `
+                            <div style="background: rgba(30, 41, 59, 0.5); border: 1px solid var(--border-glass); border-radius: 8px; padding: 12px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-weight: 700; font-size: 13px; color: var(--primary);"><i class="fa-solid fa-clock-rotate-left"></i> ${log.action}</span>
+                                    <span style="font-size: 11px; color: var(--text-dim);">${log.timestamp || ''} (By: ${log.performed_by || 'System'})</span>
+                                </div>
+                                ${detailsHtml}
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        } else {
+            body.innerHTML = '<p style="color: var(--rose); padding: 20px; text-align: center;">Failed to load audit history.</p>';
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        body.innerHTML = '<p style="color: var(--rose); padding: 20px; text-align: center;">Error fetching audit logs.</p>';
+    });
+}
+
+function closeAuditModal() {
+    const modal = document.getElementById("auditModal");
+    if (modal) modal.style.display = "none";
+}
+
 
 function updateDashboardKPIs(stats) {
     document.getElementById("kpiTotalDocs").innerHTML = stats.total_docs;
@@ -554,7 +637,10 @@ function updateCharts(stats) {
     }
 }
 
-// Simulate Certificate Download
+// Download Official Land Record Audit Certificate
 function downloadCertificate(recId) {
-    alert(`Generating Official BhumiNetra Digitally Signed Land Record Audit Certificate for Record ID: ${recId}\n\nSHA256 Stamp & QR Verification attached.`);
+    if (!recId) return;
+    const certUrl = `/api/records/${recId}/certificate/download`;
+    window.open(certUrl, '_blank');
 }
+

@@ -360,6 +360,112 @@ def get_record_audit_api(record_id):
         "audit_logs": logs
     }), 200
 
+@app.route('/api/records/<record_id>/certificate', methods=['GET'])
+@app.route('/api/records/<record_id>/certificate/download', methods=['GET'])
+def download_certificate(record_id):
+    rec = get_record_by_id(record_id)
+    if not rec:
+        return jsonify({"status": "error", "message": f"Record with ID '{record_id}' not found"}), 404
+        
+    logs = get_audit_logs(record_id)
+    owners = rec.get("owners", [])
+    owners_str = ", ".join([f"{o.get('name')} ({o.get('share_percent', '')})" for o in owners]) if owners else "N/A"
+    
+    html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BhumiNetra Audit Certificate - {rec.get('id')}</title>
+    <style>
+        body {{ font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 40px 20px; }}
+        .cert-card {{ max-width: 820px; margin: 0 auto; background: #1e293b; border: 2px solid #06b6d4; border-radius: 14px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }}
+        .header {{ text-align: center; border-bottom: 2px solid #334155; padding-bottom: 24px; margin-bottom: 30px; }}
+        .header h1 {{ color: #38bdf8; margin: 0; font-size: 24px; text-transform: uppercase; letter-spacing: 1.5px; }}
+        .header p {{ color: #94a3b8; font-size: 14px; margin: 6px 0 0 0; }}
+        .badge {{ display: inline-block; padding: 6px 14px; border-radius: 6px; font-weight: bold; font-size: 13px; text-transform: uppercase; }}
+        .badge-pass {{ background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }}
+        .badge-review {{ background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; }}
+        .section-title {{ font-size: 15px; font-weight: bold; color: #38bdf8; border-bottom: 1px solid #334155; padding-bottom: 6px; margin-top: 28px; margin-bottom: 14px; }}
+        table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; }}
+        th, td {{ padding: 10px 14px; text-align: left; border-bottom: 1px solid #334155; font-size: 13px; }}
+        th {{ background: #0f172a; color: #94a3b8; width: 35%; font-weight: 600; }}
+        td {{ color: #f8fafc; }}
+        .hash-box {{ background: #0f172a; border: 1px dashed #06b6d4; padding: 12px; font-family: monospace; font-size: 12px; color: #38bdf8; word-break: break-all; border-radius: 6px; margin-top: 8px; }}
+        .footer {{ margin-top: 40px; text-align: center; border-top: 2px solid #334155; padding-top: 20px; font-size: 12px; color: #64748b; }}
+        .print-bar {{ text-align: center; margin-bottom: 24px; }}
+        .btn-print {{ background: #06b6d4; color: #0f172a; font-weight: bold; border: none; padding: 12px 28px; border-radius: 8px; cursor: pointer; font-size: 15px; transition: all 0.2s; }}
+        .btn-print:hover {{ background: #22d3ee; box-shadow: 0 0 15px rgba(6, 182, 212, 0.4); }}
+        @media print {{
+            .print-bar {{ display: none; }}
+            body {{ background: #fff; color: #000; padding: 0; }}
+            .cert-card {{ background: #fff; color: #000; border: 2px solid #000; box-shadow: none; margin: 0; max-width: 100%; padding: 20px; }}
+            th {{ background: #f1f5f9; color: #0f172a; border-color: #cbd5e1; }}
+            td {{ color: #0f172a; border-color: #cbd5e1; }}
+            .header h1 {{ color: #0284c7; }}
+            .section-title {{ color: #0284c7; border-color: #cbd5e1; }}
+            .hash-box {{ background: #f8fafc; color: #0284c7; border-color: #0284c7; }}
+            .badge-pass {{ background: #dcfce7; color: #15803d; border-color: #16a34a; }}
+        }}
+    </style>
+</head>
+<body>
+    <div class="print-bar">
+        <button onclick="window.print()" class="btn-print">🖨️ Print / Save PDF Audit Certificate</button>
+    </div>
+    <div class="cert-card">
+        <div class="header">
+            <h1>Official Land Record Audit Certificate</h1>
+            <p>BhumiNetra AI Digitization & Governance Validation System</p>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+                <span style="font-size: 12px; color: #94a3b8;">Certificate Reference:</span><br>
+                <strong style="font-family: monospace; color: #38bdf8; font-size: 16px;">{rec.get('id')}</strong>
+            </div>
+            <div>
+                <span class="badge {'badge-pass' if rec.get('status') in ['AUTO_ACCEPTED', 'MANUALLY_APPROVED'] else 'badge-review'}">
+                    {rec.get('status')}
+                </span>
+            </div>
+        </div>
+
+        <div class="section-title">1. Digitized Land Attributes</div>
+        <table>
+            <tr><th>Document Type</th><td>{rec.get('doc_type', 'N/A')}</td></tr>
+            <tr><th>State & District</th><td>{rec.get('state', 'N/A')} / {rec.get('district', 'N/A')}</td></tr>
+            <tr><th>Taluka & Village</th><td>{rec.get('taluka', 'N/A')}, {rec.get('village', 'N/A')}</td></tr>
+            <tr><th>Survey / Khasra No.</th><td><strong style="color: #38bdf8;">{rec.get('survey_no', 'N/A')}</strong></td></tr>
+            <tr><th>Khata Account No.</th><td><strong style="color: #38bdf8;">{rec.get('khata_no', 'N/A')}</strong></td></tr>
+            <tr><th>Recorded Owners</th><td>{owners_str}</td></tr>
+            <tr><th>Total Land Area</th><td>{rec.get('total_area_acres', 0.0)} Acres ({rec.get('total_area_hectares', 0.0)} Hectares)</td></tr>
+            <tr><th>Land Classification</th><td>{rec.get('land_classification', 'Agricultural')}</td></tr>
+            <tr><th>Mutation Reference</th><td>{rec.get('mutation_ref', 'N/A')}</td></tr>
+        </table>
+
+        <div class="section-title">2. AI Pipeline & Validation Metrics</div>
+        <table>
+            <tr><th>OCR Engine Confidence</th><td>{rec.get('ocr_confidence', 0.0)}%</td></tr>
+            <tr><th>Validation Score</th><td>{rec.get('validation_score', 0.0)}%</td></tr>
+            <tr><th>Overall Governance Score</th><td><strong style="color: #34d399;">{rec.get('overall_confidence', 0.0)}%</strong></td></tr>
+        </table>
+
+        <div class="section-title">3. Digital Cryptographic Verification Stamp</div>
+        <p style="font-size: 12px; color: #94a3b8; margin-bottom: 6px;">SHA-256 Digital Signature Hash:</p>
+        <div class="hash-box">{rec.get('digital_hash', 'N/A')}</div>
+
+        <div class="footer">
+            <p>This certificate is digitally generated and validated by the <strong>BhumiNetra Land Record Platform</strong>.</p>
+            <p>Generated at: {rec.get('created_at', '')} | Verification Standard: SIH-2026-BHUMINETRA</p>
+        </div>
+    </div>
+</body>
+</html>
+"""
+    return html_content, 200, {'Content-Type': 'text/html; charset=utf-8'}
+
+
 @app.errorhandler(404)
 def handle_404(e):
     return jsonify({"status": "error", "message": "Resource or endpoint not found"}), 404

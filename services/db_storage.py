@@ -314,6 +314,19 @@ def update_record(record_id, data):
         if k in ["owners", "encumbrances", "gis", "ocr", "stages", "validation"]:
             rec[k] = v
         extracted[k] = v
+
+    # Regenerate GIS parcel map data if survey_no or location updated
+    if any(k in data for k in ["survey_no", "state", "village"]):
+        try:
+            from services.gis_engine import generate_gis_parcel_data
+            rec["gis"] = generate_gis_parcel_data(
+                rec.get("survey_no", "101/A"),
+                rec.get("state", "Maharashtra"),
+                rec.get("village", "Wagholi")
+            )
+        except Exception:
+            pass
+
         
     cursor.execute("""
     UPDATE land_records
@@ -383,6 +396,8 @@ def approve_record(record_id, comments="", reviewer="Human_Inspector", updated_f
     
     if updated_fields and isinstance(updated_fields, dict):
         for k, v in updated_fields.items():
+            if v is None:
+                continue
             # Support singular 'owner' field correction or list of 'owners'
             if k == "owner":
                 old_val = extracted.get("owner", rec.get("owners", [{}])[0].get("name") if rec.get("owners") else "")
@@ -391,38 +406,69 @@ def approve_record(record_id, comments="", reviewer="Human_Inspector", updated_f
                 extracted["owner"] = v
                 if rec.get("owners") and len(rec["owners"]) > 0:
                     rec["owners"][0]["name"] = v
+                else:
+                    rec["owners"] = [{"name": str(v), "share_fraction": 1.0, "share_percent": "100%", "area_allocated": ""}]
             else:
                 old_val = extracted.get(k, rec.get(k))
-                if old_val != v:
+                if old_val != str(v):
                     corrections.append({"field": k, "old": old_val, "new": v})
                 extracted[k] = v
-                if k in rec:
-                    rec[k] = v
-                if k == "survey_no":
-                    rec["survey_no"] = v
+                if k == "survey_no" or k == "survey_khasra_no":
+                    rec["survey_no"] = str(v)
+                    extracted["survey_khasra_no"] = str(v)
+                    extracted["survey_no"] = str(v)
                 if k == "khata_no":
-                    rec["khata_no"] = v
+                    rec["khata_no"] = str(v)
+                    extracted["khata_no"] = str(v)
                 if k == "owners":
                     rec["owners"] = v
+                    extracted["owners"] = v
                 if k == "encumbrances":
                     rec["encumbrances"] = v
+                    extracted["encumbrances"] = v
                 if k == "state":
-                    rec["state"] = v
+                    rec["state"] = str(v)
+                    extracted["state"] = str(v)
                 if k == "district":
-                    rec["district"] = v
+                    rec["district"] = str(v)
+                    extracted["district"] = str(v)
                 if k == "taluka":
-                    rec["taluka"] = v
+                    rec["taluka"] = str(v)
+                    extracted["taluka"] = str(v)
                 if k == "village":
-                    rec["village"] = v
+                    rec["village"] = str(v)
+                    extracted["village"] = str(v)
                 if k == "total_area_acres":
                     rec["total_area_acres"] = float(v)
+                    extracted["total_area_acres"] = float(v)
                 if k == "total_area_hectares":
                     rec["total_area_hectares"] = float(v)
+                    extracted["total_area_hectares"] = float(v)
                 if k == "land_classification":
-                    rec["land_classification"] = v
+                    rec["land_classification"] = str(v)
+                    extracted["land_classification"] = str(v)
                 if k == "mutation_ref":
-                    rec["mutation_ref"] = v
-                
+                    rec["mutation_ref"] = str(v)
+                    extracted["mutation_ref"] = str(v)
+
+    # Regenerate GIS parcel map data for updated survey number/location
+    try:
+        from services.gis_engine import generate_gis_parcel_data
+        updated_gis = generate_gis_parcel_data(
+            rec.get("survey_no", "101/A"),
+            rec.get("state", "Maharashtra"),
+            rec.get("village", "Wagholi")
+        )
+        rec["gis"] = updated_gis
+    except Exception:
+        pass
+
+    # Update digital signature hash
+    import hashlib
+    score_pct = rec.get("overall_confidence", 95.0)
+    raw_hash_str = f"{record_id}-{rec.get('survey_no')}-{rec.get('khata_no')}-{score_pct}-APPROVED"
+    rec["digital_hash"] = f"SHA256:{hashlib.sha256(raw_hash_str.encode('utf-8')).hexdigest()[:24].upper()}"
+
     cursor.execute("""
     UPDATE land_records
     SET status = 'MANUALLY_APPROVED',
@@ -431,7 +477,7 @@ def approve_record(record_id, comments="", reviewer="Human_Inspector", updated_f
         state = ?, district = ?, taluka = ?, village = ?,
         survey_no = ?, khata_no = ?, owners_json = ?,
         total_area_acres = ?, total_area_hectares = ?, land_classification = ?,
-        encumbrances_json = ?, mutation_ref = ?,
+        encumbrances_json = ?, mutation_ref = ?, digital_hash = ?, gis_json = ?,
         updated_at = CURRENT_TIMESTAMP
     WHERE id = ?;
     """, (
@@ -440,8 +486,8 @@ def approve_record(record_id, comments="", reviewer="Human_Inspector", updated_f
         rec.get("state"), rec.get("district"), rec.get("taluka"), rec.get("village"),
         rec.get("survey_no"), rec.get("khata_no"), json.dumps(rec.get("owners", [])),
         rec.get("total_area_acres", 0.0), rec.get("total_area_hectares", 0.0), rec.get("land_classification"),
-        json.dumps(rec.get("encumbrances", [])), rec.get("mutation_ref"),
-        record_id
+        json.dumps(rec.get("encumbrances", [])), rec.get("mutation_ref"), rec.get("digital_hash"),
+        json.dumps(rec.get("gis", {})), record_id
     ))
     
     conn.commit()
