@@ -3,51 +3,219 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BhumiNetra - Intelligent Land Record Digitization & Validation Platform</title>
-    <!-- Fonts -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap">
-    <!-- FontAwesome Icons -->
+    <title>Bhumi Netra — AI-Powered Intelligent Land Record Digitization & Validation Platform</title>
+    <meta name="description" content="Digitize and validate 7/12 extracts, RTC pahani, sale deeds, and khasra mutation records in seconds using multilingual OCR, automated rule engines, and spatial GIS cadastral mapping.">
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
+    <!-- Google Fonts: Bricolage Grotesque, DM Sans, Plus Jakarta Sans -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+    <!-- FontAwesome 6 Pro Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Leaflet.js GIS Maps -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <!-- Chart.js for Analytics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Custom CSS -->
+    <!-- BhumiNetra Design System CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
 
     <!-- Header Navbar -->
     <header class="app-navbar">
-        <div class="brand-container">
-            <div class="brand-logo">
-                <i class="fa-solid fa-map-location-dot"></i>
-            </div>
+        <a href="#" class="brand-container">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Bhumi Netra Logo" class="brand-logo-img">
             <div>
-                <h1 class="brand-title">BhumiNetra</h1>
-                <p class="brand-subtitle">Intelligent Land Record Digitization & Validation Platform</p>
+                <h1 class="brand-title" id="txt-brand-title">Bhumi Netra</h1>
+                <p class="brand-subtitle" id="txt-brand-subtitle">AI Land Record Digitization Engine</p>
             </div>
-        </div>
+        </a>
+
+        <!-- Desktop Navigation Links -->
+        <nav class="nav-menu">
+            <a href="#hero-section" class="nav-link active" onclick="setActiveNav(this)" id="txt-nav-upload">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Upload & Process
+            </a>
+            <a href="#dashboard-section" class="nav-link" onclick="setActiveNav(this)" id="txt-nav-dashboard">
+                <i class="fa-solid fa-chart-line"></i> Dashboard
+            </a>
+            <a href="#gis-section" class="nav-link" onclick="setActiveNav(this)" id="txt-nav-gis">
+                <i class="fa-solid fa-globe"></i> GIS Spatial Map
+            </a>
+            <a href="#database-section" class="nav-link" onclick="setActiveNav(this)" id="txt-nav-database">
+                <i class="fa-solid fa-folder-open"></i> Documents DB
+            </a>
+            <a href="#ask-ai-section" class="nav-link" onclick="setActiveNav(this)" id="txt-nav-ask">
+                <i class="fa-solid fa-comments"></i> Ask AI
+            </a>
+            <a href="#hitlWorkbench" class="nav-link" onclick="setActiveNav(this)" id="txt-nav-review">
+                <i class="fa-solid fa-user-check"></i> HITL Review
+            </a>
+        </nav>
+
         <div class="nav-stats">
+            <!-- Multilingual i18n Language Dropdown Switcher matching land-verifier-buddy -->
+            <div class="lang-dropdown-container">
+                <button class="lang-select-btn" onclick="toggleLangDropdown()">
+                    <i class="fa-solid fa-globe"></i>
+                    <span id="currentLangLabel">EN</span>
+                    <i class="fa-solid fa-chevron-down" style="font-size: 10px;"></i>
+                </button>
+                <div class="lang-dropdown-menu" id="langDropdownMenu">
+                    <div class="lang-dropdown-item active" id="lang-item-en" onclick="setLanguage('en')">
+                        <span>English</span>
+                        <i class="fa-solid fa-check" style="font-size: 11px;"></i>
+                    </div>
+                    <div class="lang-dropdown-item" id="lang-item-mr" onclick="setLanguage('mr')">
+                        <span>मराठी</span>
+                        <i class="fa-solid fa-check" style="font-size: 11px; display: none;"></i>
+                    </div>
+                    <div class="lang-dropdown-item" id="lang-item-hi" onclick="setLanguage('hi')">
+                        <span>हिंदी</span>
+                        <i class="fa-solid fa-check" style="font-size: 11px; display: none;"></i>
+                    </div>
+                </div>
+            </div>
+
             <div class="nav-chip">
                 <span class="dot-pulse"></span>
-                <span>AI Pipeline Active</span>
+                <span id="txt-ai-active">AI Engine Active</span>
             </div>
-            <div class="nav-chip">
-                <i class="fa-solid fa-shield-halved" style="color: var(--primary);"></i>
-                <span id="navTotalProcessed">0 Records Digitized</span>
+            
+            <button class="nav-action-btn" onclick="toggleNotificationsModal()" title="System Notifications">
+                <i class="fa-solid fa-bell"></i>
+                <span class="notification-badge">2</span>
+            </button>
+            
+            <div class="nav-chip" style="background: var(--primary-light); border-color: var(--primary-border); cursor: pointer;" title="Talathi Officer Session">
+                <div class="user-avatar-badge">SS</div>
+                <span style="font-weight: 700; font-size: 13px; color: var(--primary-hover);">Swara Sonje · Talathi Office</span>
             </div>
         </div>
     </header>
 
     <main class="main-container">
 
+        <!-- Hero Section & Upload Area -->
+        <section id="hero-section" style="margin-bottom: 32px;">
+            <div style="display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 36px; align-items: center;">
+                <div>
+                    <span class="hero-tag">
+                        <i class="fa-solid fa-shield-check"></i> <span id="txt-hero-tag">GovTech Platform</span>
+                    </span>
+                    <h1 class="hero-title" id="txt-hero-title">
+                        Validate & Digitize Land Records in Seconds with AI.
+                    </h1>
+                    <p class="hero-subtitle" id="txt-hero-subtitle">
+                        Upload Form 7/12 extracts, RTC Pahani records, or Khasra mutation entries. Bhumi Netra pre-processes scans using OpenCV, extracts multilingual text, evaluates validation rules, and flags discrepancies for inspector review.
+                    </p>
+                    
+                    <div style="display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 24px;">
+                        <button class="btn-primary" onclick="document.getElementById('fileInput').click()">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> <span id="txt-btn-upload">Upload Scanned Record</span>
+                        </button>
+                        <button class="btn-secondary" onclick="scrollToSection('database-section')">
+                            <i class="fa-solid fa-database"></i> <span id="txt-btn-browse">Browse Verified Records</span>
+                        </button>
+                    </div>
+
+                    <div class="hero-feature-grid">
+                        <div class="hero-feature-card">
+                            <i class="fa-solid fa-language hero-feature-icon"></i>
+                            <p class="hero-feature-title" id="txt-feat1-title">Multilingual OCR</p>
+                            <p class="hero-feature-desc" id="txt-feat1-desc">Devanagari (Marathi/Hindi) & Kannada</p>
+                        </div>
+                        <div class="hero-feature-card">
+                            <i class="fa-solid fa-triangle-exclamation hero-feature-icon" style="color: var(--warning-foreground);"></i>
+                            <p class="hero-feature-title" id="txt-feat2-title">Automated Rule Engine</p>
+                            <p class="hero-feature-desc" id="txt-feat2-desc">Flags share & area math errors</p>
+                        </div>
+                        <div class="hero-feature-card">
+                            <i class="fa-solid fa-fingerprint hero-feature-icon" style="color: var(--info);"></i>
+                            <p class="hero-feature-title" id="txt-feat3-title">Immutable Audit Trail</p>
+                            <p class="hero-feature-desc" id="txt-feat3-desc">SHA-256 digital signature hash</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Hero Drag & Drop Area -->
+                <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+                    <div style="width: 72px; height: 72px; border-radius: 20px; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto 16px auto; border: 1px solid var(--primary-border); box-shadow: var(--shadow-subtle);">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+                    <h2 style="font-family: var(--font-display); font-size: 22px; font-weight: 800; color: var(--foreground); margin-bottom: 6px;" id="txt-dropzone-title">
+                        Drop Scanned Records Here
+                    </h2>
+                    <p style="font-size: 13.5px; color: var(--muted-foreground); max-width: 300px; margin: 0 auto 20px auto; line-height: 1.5;" id="txt-dropzone-subtitle">
+                        Supports PDF, PNG, or JPG formats. Low resolution, rotated, or aged revenue records supported.
+                    </p>
+                    <button class="btn-secondary" style="margin-bottom: 12px; pointer-events: none;">
+                        <i class="fa-solid fa-folder-open"></i> <span id="txt-dropzone-btn">Browse Computer</span>
+                    </button>
+                    <input type="file" id="fileInput" style="display: none;" accept="image/*,.pdf" onchange="handleFileUpload(event)">
+                </div>
+            </div>
+        </section>
+
+        <!-- Document Preset Selector Section -->
+        <section class="input-section">
+            <div class="surface-card">
+                <div class="section-heading">
+                    <span><i class="fa-solid fa-layer-group" style="color: var(--primary); margin-right: 8px;"></i> <span id="txt-preset-heading">Select Sample Land Record Document</span></span>
+                    <span style="font-size: 12px; color: var(--muted-foreground); font-weight: 600;">Multi-State Revenue Extracts</span>
+                </div>
+                <div class="preset-grid">
+                    <div class="preset-card active" id="preset-maharashtra_712" onclick="selectPreset('maharashtra_712')">
+                        <div>
+                            <span class="preset-badge badge-clean"><i class="fa-solid fa-circle-check"></i> High Confidence</span>
+                            <div class="preset-title">Form 7/12 Extract (Satbara)</div>
+                            <div class="preset-desc">Maharashtra Revenue | Devanagari Script | Clean Scan & Clear Boundaries</div>
+                        </div>
+                    </div>
+                    
+                    <div class="preset-card" id="preset-karnataka_rtc" onclick="selectPreset('karnataka_rtc')">
+                        <div>
+                            <span class="preset-badge badge-warning"><i class="fa-solid fa-triangle-exclamation"></i> Triggers HITL</span>
+                            <div class="preset-title">RTC / Pahani Record</div>
+                            <div class="preset-desc">Karnataka Revenue | Kannada Script | Skewed Scan & Share Discrepancy</div>
+                        </div>
+                    </div>
+                    
+                    <div class="preset-card" id="preset-up_khasra" onclick="selectPreset('up_khasra')">
+                        <div>
+                            <span class="preset-badge badge-clean"><i class="fa-solid fa-circle-check"></i> High Confidence</span>
+                            <div class="preset-title">Khasra - Khatauni Extract</div>
+                            <div class="preset-desc">Uttar Pradesh Bhulekh | Hindi Script | Sole Khatedar Entry</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pipeline Run Trigger Card -->
+            <div class="surface-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div class="section-heading">
+                        <span><i class="fa-solid fa-bolt" style="color: var(--primary); margin-right: 8px;"></i> Execute Pipeline</span>
+                    </div>
+                    <p style="font-size: 13.5px; color: var(--muted-foreground); line-height: 1.55; margin-bottom: 20px;">
+                        Executes OpenCV image Deskew/Binarization, multilingual OCR text extraction, rule engine calculation, and GIS spatial parcel linking.
+                    </p>
+                </div>
+                <button class="btn-primary" id="btnProcess" onclick="runPipelineProcess()" style="width: 100%; padding: 14px 20px; font-size: 15px;">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>Execute Bhumi Netra Pipeline</span>
+                </button>
+            </div>
+        </section>
+
         <!-- Architectural Demo Flowchart Stepper -->
         <section class="pipeline-flowbar">
             <div class="flowbar-title">
-                <i class="fa-solid fa-diagram-project" style="color: var(--primary);"></i>
-                <span>Architectural Demo Pipeline Flow</span>
+                <div>
+                    <i class="fa-solid fa-diagram-project" style="color: var(--primary); margin-right: 8px;"></i>
+                    <span>Architectural Pipeline Workflow</span>
+                </div>
+                <span style="font-size: 12px; text-transform: none; color: var(--muted-foreground); font-weight: 500;">Click nodes to inspect pipeline stages</span>
             </div>
             <div class="stepper-list">
                 <div class="step-node active" id="step-node-1" onclick="jumpToStep(1)">
@@ -105,61 +273,13 @@
             </div>
         </section>
 
-        <!-- Input Section: Sample Preset Document Library & File Upload -->
-        <section class="input-section">
-            <div class="card-glass">
-                <div class="section-heading">
-                    <span><i class="fa-solid fa-layer-group" style="color: var(--cyan);"></i> Select Sample Land Record Document</span>
-                    <span style="font-size: 12px; color: var(--text-dim);">Pre-loaded multi-state land extracts</span>
-                </div>
-                <div class="preset-grid">
-                    <div class="preset-card active" id="preset-maharashtra_712" onclick="selectPreset('maharashtra_712')">
-                        <span class="preset-badge badge-clean">High Confidence Preset</span>
-                        <div class="preset-title">Form 7/12 Extract (Satbara)</div>
-                        <div class="preset-desc">Maharashtra Revenue Record | Marathi Devanagari Script | Clean Scan</div>
-                    </div>
-                    
-                    <div class="preset-card" id="preset-karnataka_rtc" onclick="selectPreset('karnataka_rtc')">
-                        <span class="preset-badge badge-warning">Low Confidence (Triggers HITL)</span>
-                        <div class="preset-title">RTC / Pahani Record</div>
-                        <div class="preset-desc">Karnataka Revenue | Kannada Script | Rotated Scan & Math Discrepancy</div>
-                    </div>
-                    
-                    <div class="preset-card" id="preset-up_khasra" onclick="selectPreset('up_khasra')">
-                        <span class="preset-badge badge-clean">High Confidence Preset</span>
-                        <div class="preset-title">Khasra - Khatauni Extract</div>
-                        <div class="preset-desc">Uttar Pradesh Bhulekh | Hindi Devanagari | Sole Khatedar</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Upload Custom File -->
-            <div class="card-glass" style="display: flex; flex-direction: column; justify-content: space-between;">
-                <div>
-                    <div class="section-heading">
-                        <span><i class="fa-solid fa-cloud-arrow-up" style="color: var(--primary);"></i> Custom Upload</span>
-                    </div>
-                    <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
-                        <i class="fa-solid fa-file-image" style="font-size: 28px; color: var(--text-muted); margin-bottom: 8px;"></i>
-                        <p style="font-size: 13px; color: var(--text-muted);">Drop Land Record PDF / Image</p>
-                        <p style="font-size: 11px; color: var(--text-dim); margin-top: 4px;">Supports PNG, JPG, PDF</p>
-                        <input type="file" id="fileInput" style="display: none;" accept="image/*,.pdf" onchange="handleFileUpload(event)">
-                    </div>
-                </div>
-                <button class="btn-primary" id="btnProcess" onclick="runPipelineProcess()" style="margin-top: 16px;">
-                    <i class="fa-solid fa-bolt"></i>
-                    <span>Execute BhumiNetra Pipeline</span>
-                </button>
-            </div>
-        </section>
-
         <!-- Pipeline Execution Visualizer (OpenCV + OCR + Fields) -->
         <section class="pipeline-viewer-grid">
             <!-- Left: OpenCV Stage & Multilingual OCR Visualizer -->
-            <div class="card-glass">
+            <div class="surface-card">
                 <div class="section-heading">
-                    <span><i class="fa-solid fa-microscope" style="color: var(--cyan);"></i> Visual Processing Engine (OpenCV & OCR)</span>
-                    <span class="nav-chip" id="stageMetadata" style="font-size: 11px;">Select Stage Below</span>
+                    <span><i class="fa-solid fa-microscope" style="color: var(--primary); margin-right: 8px;"></i> Visual Processing Engine (OpenCV & OCR)</span>
+                    <span class="nav-chip" id="stageMetadata" style="font-size: 11.5px;">Select Stage Below</span>
                 </div>
                 
                 <!-- Stage Tabs -->
@@ -180,29 +300,30 @@
                         <div id="ocrBoxesOverlay"></div>
                     </div>
                     <div id="loaderSpinner" style="text-align: center; display: none;">
-                        <i class="fa-solid fa-spinner fa-spin" style="font-size: 36px; color: var(--primary);"></i>
-                        <p style="margin-top: 12px; font-size: 14px; color: var(--text-muted);">Running OpenCV Filtering & Multilingual OCR...</p>
+                        <i class="fa-solid fa-spinner fa-spin" style="font-size: 40px; color: var(--primary);"></i>
+                        <p style="margin-top: 14px; font-size: 14px; color: #94a3b8; font-weight: 600;">Executing Image Pre-Processing & Multilingual OCR...</p>
                     </div>
                 </div>
             </div>
 
             <!-- Right: AI Field Extraction & Validation Engine Report -->
-            <div class="card-glass" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div class="surface-card" style="display: flex; flex-direction: column; justify-content: space-between;">
                 <div>
                     <div class="section-heading">
-                        <span><i class="fa-solid fa-rectangle-list" style="color: var(--primary);"></i> AI Field Extraction & Validation Audit</span>
+                        <span><i class="fa-solid fa-rectangle-list" style="color: var(--primary); margin-right: 8px;"></i> AI Field Extraction & Validation Audit</span>
                         <span id="extractionConfBadge" class="rule-status-pass" style="display: none;">Conf: 98%</span>
                     </div>
 
                     <div id="fieldExtractionContainer">
-                        <p style="font-size: 13px; color: var(--text-dim); font-style: italic;">Execute pipeline to view extracted land attributes and rule engine flags.</p>
+                        <p style="font-size: 13.5px; color: var(--muted-foreground); font-style: italic;">Execute pipeline to view extracted land attributes and rule engine flags.</p>
                     </div>
                 </div>
 
-                <!-- Validation Rules Accordion -->
+                <!-- Validation Rules Audit List -->
                 <div style="margin-top: 20px;">
-                    <div style="font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 10px;">
-                        <i class="fa-solid fa-shield-check" style="color: var(--cyan);"></i> Validation Rules Audit Log
+                    <div style="font-size: 14px; font-weight: 700; color: var(--foreground); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+                        <span><i class="fa-solid fa-shield-check" style="color: var(--primary); margin-right: 8px;"></i> Validation Rules Audit Log</span>
+                        <span style="font-size: 11.5px; color: var(--muted-foreground);">Automated Engine</span>
                     </div>
                     <div id="validationRulesList"></div>
                 </div>
@@ -215,41 +336,70 @@
                 <div style="display: flex; align-items: center; gap: 20px;">
                     <div class="score-circle" id="decisionScoreCircle">96%</div>
                     <div>
-                        <h2 style="font-family: var(--font-heading); font-size: 20px; font-weight: 800; color: #fff;" id="decisionTitle">AUTO ACCEPTED RECORD</h2>
-                        <p style="font-size: 13px; color: var(--text-muted);" id="decisionSubtitle">Record passed high confidence threshold (≥85%). Automatically ingested into Database & GIS mapping.</p>
+                        <h2 style="font-family: var(--font-display); font-size: 20px; font-weight: 800;" id="decisionTitle">AUTO ACCEPTED RECORD</h2>
+                        <p style="font-size: 13.5px; color: var(--muted-foreground);" id="decisionSubtitle">Record passed high confidence threshold (≥85%). Automatically ingested into Database & GIS spatial parcel layer.</p>
                     </div>
                 </div>
                 <div id="decisionActionArea"></div>
             </div>
         </section>
 
+        <!-- Ask Bhumi Netra AI Assistant Section (Inspired by land-verifier-buddy /ask route) -->
+        <section id="ask-ai-section" class="ask-ai-card">
+            <div class="section-heading">
+                <span><i class="fa-solid fa-robot" style="color: var(--primary); margin-right: 8px;"></i> Ask Bhumi Netra AI Assistant</span>
+                <span style="font-size: 12px; color: var(--muted-foreground); font-weight: 600;">Plain English, Marathi & Hindi Questions</span>
+            </div>
+            
+            <div class="chat-box" id="aiChatBox">
+                <div class="chat-bubble-app">
+                    👋 <strong>Hello!</strong> Ask me anything about your digitized land records — owners, survey numbers, village extracts, or pending review counts.
+                </div>
+            </div>
+
+            <form onsubmit="handleAiChatSubmit(event)" style="display: flex; gap: 10px;">
+                <input type="text" id="aiChatInput" class="form-control" style="margin-bottom: 0;" placeholder="e.g. How many documents are verified? Or show records in Pune...">
+                <button type="submit" class="btn-primary" style="padding: 10px 20px;">
+                    <i class="fa-solid fa-paper-plane"></i> Ask AI
+                </button>
+            </form>
+
+            <div class="suggestion-pills">
+                <span style="font-size: 12px; color: var(--muted-foreground); font-weight: 700; align-self: center;">Suggestions:</span>
+                <button class="suggestion-pill" onclick="sendAiChatQuery('How many documents are verified?')">How many documents are verified?</button>
+                <button class="suggestion-pill" onclick="sendAiChatQuery('What records need my check?')">What records need my check?</button>
+                <button class="suggestion-pill" onclick="sendAiChatQuery('Show records in Pune')">Show records in Pune</button>
+                <button class="suggestion-pill" onclick="sendAiChatQuery('Who owns survey number 142/3B?')">Who owns survey number 142/3B?</button>
+            </div>
+        </section>
+
         <!-- Human-in-the-Loop (HITL) Review Workbench -->
         <section id="hitlWorkbench" class="hitl-workbench" style="display: none;">
-            <div class="section-heading" style="color: var(--amber);">
-                <span><i class="fa-solid fa-user-pen"></i> Human-in-the-Loop (HITL) Review Workbench</span>
-                <span class="preset-badge badge-warning">Manual Verification Required</span>
+            <div class="section-heading" style="color: var(--warning-foreground); border-bottom-color: var(--warning-border);">
+                <span><i class="fa-solid fa-user-pen" style="margin-right: 8px;"></i> Human-in-the-Loop (HITL) Review Workbench</span>
+                <span class="preset-badge badge-warning"><i class="fa-solid fa-triangle-exclamation"></i> Manual Verification Required</span>
             </div>
             
             <div class="hitl-grid">
                 <div>
-                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">Crop ROI Inspector - Click field to zoom scan region</p>
-                    <div class="viewer-frame" style="min-height: 320px;">
+                    <p style="font-size: 13px; color: var(--muted-foreground); margin-bottom: 10px; font-weight: 700;">Crop ROI Inspector — Zoom Scan Region</p>
+                    <div class="viewer-frame" style="min-height: 340px;">
                         <img id="hitlCropImg" class="stage-image" src="" alt="Crop ROI">
                     </div>
                 </div>
                 <div>
-                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">Verify & Override Extracted Land Record Attributes</p>
+                    <p style="font-size: 13px; color: var(--muted-foreground); margin-bottom: 10px; font-weight: 700;">Verify & Override Extracted Land Record Attributes</p>
                     
-                    <label style="font-size: 12px; color: var(--text-muted);">Survey / Khasra No.</label>
+                    <label style="font-size: 12px; color: var(--muted-foreground); font-weight: 700; display: block; margin-bottom: 4px;">Survey / Khasra No.</label>
                     <input type="text" id="hitlSurveyNo" class="form-control" value="">
                     
-                    <label style="font-size: 12px; color: var(--text-muted);">Khata Account No.</label>
+                    <label style="font-size: 12px; color: var(--muted-foreground); font-weight: 700; display: block; margin-bottom: 4px;">Khata Account No.</label>
                     <input type="text" id="hitlKhataNo" class="form-control" value="">
                     
-                    <label style="font-size: 12px; color: var(--text-muted);">Primary Owner Name</label>
+                    <label style="font-size: 12px; color: var(--muted-foreground); font-weight: 700; display: block; margin-bottom: 4px;">Primary Owner Name</label>
                     <input type="text" id="hitlOwnerName" class="form-control" value="">
                     
-                    <label style="font-size: 12px; color: var(--text-muted);">Review Inspector Notes</label>
+                    <label style="font-size: 12px; color: var(--muted-foreground); font-weight: 700; display: block; margin-bottom: 4px;">Review Inspector Notes</label>
                     <textarea id="hitlComments" class="form-control" rows="2" placeholder="Reason for approval or correction..."></textarea>
                     
                     <div class="btn-group-hitl">
@@ -265,52 +415,87 @@
         </section>
 
         <!-- GIS Spatial Land Mapping Section -->
-        <section class="card-glass" style="margin-bottom: 28px;">
+        <section class="surface-card" id="gis-section" style="margin-bottom: 32px;">
             <div class="section-heading">
-                <span><i class="fa-solid fa-earth-asia" style="color: var(--primary);"></i> GIS Spatial Cadastral Land Parcel Map</span>
+                <span><i class="fa-solid fa-globe" style="color: var(--primary); margin-right: 8px;"></i> GIS Spatial Cadastral Land Parcel Map</span>
                 <span class="nav-chip" id="gisCoordinatesBadge" style="font-size: 12px;">Lat: --, Lng: --</span>
             </div>
             <div id="gisMap"></div>
         </section>
 
         <!-- Executive Analytics Dashboard & Database Browser -->
-        <section class="card-glass">
-            <div class="section-heading">
-                <span><i class="fa-solid fa-chart-pie" style="color: var(--cyan);"></i> Executive Analytics & Verified Database</span>
-                <button class="nav-chip" onclick="loadDatabaseRecords()" style="cursor: pointer;">
+        <section class="surface-card" id="dashboard-section">
+            <div class="section-heading" id="database-section">
+                <span><i class="fa-solid fa-chart-line" style="color: var(--primary); margin-right: 8px;"></i> Executive Analytics & Verified Database</span>
+                <button class="btn-secondary" onclick="loadDatabaseRecords()" style="padding: 6px 14px; font-size: 13px;">
                     <i class="fa-solid fa-rotate"></i> Refresh Database
                 </button>
             </div>
 
-            <!-- Dashboard KPI Cards -->
+            <!-- Quick Action Camera Scan Banner -->
+            <div class="quick-action-hero" onclick="document.getElementById('fileInput').click()">
+                <div class="quick-action-icon">
+                    <i class="fa-solid fa-camera"></i>
+                </div>
+                <div>
+                    <h3 style="font-family: var(--font-display); font-size: 20px; font-weight: 800;">Scan & Read New Land Document</h3>
+                    <p style="font-size: 13.5px; opacity: 0.95;">Upload a 7/12, RTC, or Khasra extract to trigger full AI validation & GIS parcel linking.</p>
+                </div>
+                <i class="fa-solid fa-arrow-right" style="margin-left: auto; font-size: 22px;"></i>
+            </div>
+
+            <!-- Dashboard KPI Cards (5 Cards) -->
             <div class="kpi-grid">
                 <div class="kpi-card">
-                    <span class="kpi-lbl">Total Records Processed</span>
+                    <span class="kpi-lbl"><i class="fa-solid fa-file-lines"></i> <span id="txt-kpi-total">Total Documents</span></span>
                     <span class="kpi-val" id="kpiTotalDocs">0</span>
                 </div>
                 <div class="kpi-card">
-                    <span class="kpi-lbl">Auto-Accept Rate</span>
+                    <span class="kpi-lbl"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary);"></i> <span id="txt-kpi-restored">Restored Rate</span></span>
                     <span class="kpi-val" id="kpiAutoAcceptRate" style="color: var(--primary);">0%</span>
                 </div>
                 <div class="kpi-card">
-                    <span class="kpi-lbl">Pending HITL Queue</span>
-                    <span class="kpi-val" id="kpiPendingQueue" style="color: var(--amber);">0</span>
+                    <span class="kpi-lbl"><i class="fa-solid fa-user-clock" style="color: var(--warning-foreground);"></i> <span id="txt-kpi-pending">Pending HITL</span></span>
+                    <span class="kpi-val" id="kpiPendingQueue" style="color: var(--warning-foreground);">0</span>
                 </div>
                 <div class="kpi-card">
-                    <span class="kpi-lbl">Avg Pipeline Speed</span>
-                    <span class="kpi-val" id="kpiAvgSpeed" style="color: var(--cyan);">342 ms</span>
+                    <span class="kpi-lbl"><i class="fa-solid fa-circle-check" style="color: var(--success);"></i> <span id="txt-kpi-verified">Verified Records</span></span>
+                    <span class="kpi-val" id="kpiVerifiedCount" style="color: var(--success);">0</span>
+                </div>
+                <div class="kpi-card">
+                    <span class="kpi-lbl"><i class="fa-solid fa-gauge-high" style="color: var(--info);"></i> Avg Speed</span>
+                    <span class="kpi-val" id="kpiAvgSpeed" style="color: var(--info);">342 ms</span>
                 </div>
             </div>
 
-            <!-- Charts Grid -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px;">
-                <div style="background: rgba(15, 23, 42, 0.4); border-radius: var(--radius-md); padding: 16px;">
-                    <p style="font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 12px;">Digitization Outcome Breakdown</p>
+            <!-- Analytics Charts Grid -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;">
+                <div style="background: #ffffff; border-radius: var(--radius-lg); padding: 20px; border: 1px solid var(--border); box-shadow: var(--shadow-subtle);">
+                    <p style="font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--foreground); margin-bottom: 14px;">
+                        Digitization Outcome Breakdown
+                    </p>
                     <canvas id="outcomeChart" height="200"></canvas>
                 </div>
-                <div style="background: rgba(15, 23, 42, 0.4); border-radius: var(--radius-md); padding: 16px;">
-                    <p style="font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 12px;">Multilingual Script Distribution</p>
+                <div style="background: #ffffff; border-radius: var(--radius-lg); padding: 20px; border: 1px solid var(--border); box-shadow: var(--shadow-subtle);">
+                    <p style="font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--foreground); margin-bottom: 14px;">
+                        Multilingual Script Distribution
+                    </p>
                     <canvas id="languageChart" height="200"></canvas>
+                </div>
+            </div>
+
+            <!-- Database Search Bar & Filter Controls -->
+            <div class="table-toolbar">
+                <div class="search-input-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="dbSearchInput" class="search-input" placeholder="Search land records by ID, Owner, Survey No, Village, or District..." onkeyup="filterDatabaseTable()">
+                </div>
+                <div class="filter-pills">
+                    <button class="filter-pill active" onclick="filterByStatus('ALL', this)">All</button>
+                    <button class="filter-pill" onclick="filterByStatus('AUTO_ACCEPTED', this)">Auto Accepted</button>
+                    <button class="filter-pill" onclick="filterByStatus('PENDING_HUMAN_REVIEW', this)">Needs Review</button>
+                    <button class="filter-pill" onclick="filterByStatus('MANUALLY_APPROVED', this)">Approved</button>
+                    <button class="filter-pill" onclick="filterByStatus('REJECTED', this)">Rejected</button>
                 </div>
             </div>
 
@@ -318,23 +503,23 @@
             <div style="overflow-x: auto;">
                 <table class="field-table" id="dbTable">
                     <thead>
-                        <tr>
-                            <th>Record ID</th>
-                            <th>Document Type</th>
-                            <th>State / Village</th>
-                            <th>Survey No</th>
-                            <th>Khata No</th>
-                            <th>Area (Acres)</th>
-                            <th>Confidence</th>
-                            <th>Status</th>
-                            <th>Digital Hash</th>
-                            <th>Action</th>
+                        <tr style="background: var(--secondary);">
+                            <th style="padding: 12px 14px; text-align: left; font-size: 12.5px; font-weight: 700; color: var(--muted-foreground);">Record ID</th>
+                            <th style="padding: 12px 14px; text-align: left; font-size: 12.5px; font-weight: 700; color: var(--muted-foreground);">Document Type</th>
+                            <th style="padding: 12px 14px; text-align: left; font-size: 12.5px; font-weight: 700; color: var(--muted-foreground);">State / Village</th>
+                            <th style="padding: 12px 14px; text-align: left; font-size: 12.5px; font-weight: 700; color: var(--muted-foreground);">Survey No</th>
+                            <th style="padding: 12px 14px; text-align: left; font-size: 12.5px; font-weight: 700; color: var(--muted-foreground);">Khata No</th>
+                            <th style="padding: 12px 14px; text-align: left; font-size: 12.5px; font-weight: 700; color: var(--muted-foreground);">Area (Acres)</th>
+                            <th style="padding: 12px 14px; text-align: left; font-size: 12.5px; font-weight: 700; color: var(--muted-foreground);">Confidence</th>
+                            <th style="padding: 12px 14px; text-align: left; font-size: 12.5px; font-weight: 700; color: var(--muted-foreground);">Status</th>
+                            <th style="padding: 12px 14px; text-align: left; font-size: 12.5px; font-weight: 700; color: var(--muted-foreground);">Digital Hash</th>
+                            <th style="padding: 12px 14px; text-align: left; font-size: 12.5px; font-weight: 700; color: var(--muted-foreground);">Action</th>
                         </tr>
                     </thead>
                     <tbody id="dbTableBody">
                         <tr>
-                            <td colspan="10" style="text-align: center; color: var(--text-dim); padding: 20px;">
-                                Loading verified land records from SQLite database...
+                            <td colspan="10" style="text-align: center; color: var(--muted-foreground); padding: 28px;">
+                                <i class="fa-solid fa-spinner fa-spin" style="margin-right: 8px;"></i> Loading verified land records from database...
                             </td>
                         </tr>
                     </tbody>
@@ -344,17 +529,63 @@
 
     </main>
 
+    <!-- Mobile Fixed Bottom Navigation Bar -->
+    <nav class="mobile-bottom-nav">
+        <a href="#hero-section" class="mobile-nav-item active">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <span>Upload</span>
+        </a>
+        <a href="#dashboard-section" class="mobile-nav-item">
+            <i class="fa-solid fa-chart-line"></i>
+            <span>Dashboard</span>
+        </a>
+        <a href="#gis-section" class="mobile-nav-item">
+            <i class="fa-solid fa-globe"></i>
+            <span>GIS Map</span>
+        </a>
+        <a href="#database-section" class="mobile-nav-item">
+            <i class="fa-solid fa-folder-open"></i>
+            <span>Records</span>
+        </a>
+        <a href="#ask-ai-section" class="mobile-nav-item">
+            <i class="fa-solid fa-comments"></i>
+            <span>Ask AI</span>
+        </a>
+        <a href="#hitlWorkbench" class="mobile-nav-item">
+            <i class="fa-solid fa-user-check"></i>
+            <span>Review</span>
+        </a>
+    </nav>
+
+    <!-- Notifications Modal -->
+    <div id="notificationsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(6px); z-index: 9999; align-items: center; justify-content: center;">
+        <div style="background: #ffffff; border: 1px solid var(--border); border-radius: var(--radius-xl); width: 90%; max-width: 480px; padding: 24px; box-shadow: var(--shadow-lift);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h3 style="font-family: var(--font-display); font-size: 18px; font-weight: 800; color: var(--foreground); margin: 0;"><i class="fa-solid fa-bell" style="color: var(--primary);"></i> System Notifications</h3>
+                <button onclick="toggleNotificationsModal()" style="background: none; border: none; color: var(--muted-foreground); font-size: 22px; cursor: pointer;">&times;</button>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div style="background: var(--primary-light); border: 1px solid var(--primary-border); padding: 14px; border-radius: 12px; font-size: 13px; color: var(--primary-hover); line-height: 1.45;">
+                    <strong>AI Engine Notice:</strong> Multilingual OCR model active for Devanagari (Marathi/Hindi) and Kannada scripts.
+                </div>
+                <div style="background: var(--warning-bg); border: 1px solid var(--warning-border); padding: 14px; border-radius: 12px; font-size: 13px; color: var(--warning-foreground); line-height: 1.45;">
+                    <strong>HITL Workbench:</strong> Karnataka RTC scan queued for human review due to math share discrepancy.
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Audit History Modal -->
-    <div id="auditModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center;">
-        <div style="background: var(--bg-card); border: 1px solid var(--cyan); border-radius: var(--radius-md); width: 90%; max-width: 680px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: var(--shadow-glass); overflow: hidden;">
-            <div style="padding: 16px 24px; border-bottom: 1px solid var(--border-glass); display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.9);">
-                <h3 style="font-family: var(--font-heading); font-size: 16px; font-weight: 700; color: #fff; margin: 0;">
-                    <i class="fa-solid fa-clock-rotate-left" style="color: var(--cyan);"></i> Audit Trail History: <span id="auditModalRecId" style="color: var(--primary); font-family: monospace;"></span>
+    <div id="auditModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(6px); z-index: 9999; align-items: center; justify-content: center;">
+        <div style="background: #ffffff; border: 1px solid var(--border); border-radius: var(--radius-xl); width: 90%; max-width: 680px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: var(--shadow-lift); overflow: hidden;">
+            <div style="padding: 18px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+                <h3 style="font-family: var(--font-display); font-size: 16px; font-weight: 800; color: var(--foreground); margin: 0;">
+                    <i class="fa-solid fa-clock-rotate-left" style="color: var(--primary);"></i> Audit Trail History: <span id="auditModalRecId" style="color: var(--primary); font-family: monospace;"></span>
                 </h3>
-                <button onclick="closeAuditModal()" style="background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer;">&times;</button>
+                <button onclick="closeAuditModal()" style="background: none; border: none; color: var(--muted-foreground); font-size: 24px; cursor: pointer;">&times;</button>
             </div>
             <div id="auditModalBody" style="padding: 20px; overflow-y: auto; flex: 1;">
-                <p style="color: var(--text-dim); text-align: center;">Loading audit trail logs...</p>
+                <p style="color: var(--muted-foreground); text-align: center;">Loading audit trail logs...</p>
             </div>
         </div>
     </div>
@@ -363,4 +594,3 @@
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
-
